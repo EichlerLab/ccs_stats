@@ -217,7 +217,8 @@ def get_hist_plot(
 def get_density_plot(
         stat_list, scale_val=1, width=7, height=7, dpi=300, z_cut=None, legend=True,
         grid_spec = {'color': '#b8b8c8', 'which': 'both', 'lw': 0.5},
-        bins=500, covariance_factor=0.25, xlim=(None, None), xlab=None, ylab=None
+        bins=500, covariance_factor=0.25, xlim=(None, None), xlab=None, ylab=None,
+        color=dict()
     ):
     """
     Get a density plot.
@@ -235,6 +236,9 @@ def get_density_plot(
     :params bins: Number of points along x to calculate density.
     :params covariance_factor: Density covariance factor.
     :param xlim: X-axis limits.
+    :param xlab: X-axis label.
+    :param ylab: Y-axis label.
+    :param color: Color dictionary keyed by first tuple element for each entry in stat_list.
     """
 
     # Make figure
@@ -264,8 +268,8 @@ def get_density_plot(
                 x_max = x_lim[1]
 
         else:
-            x_min = np.min([np.min(stats) for label, stats in stat_list])
-            x_max = np.max([np.max(stats) for label, stats in stat_list])
+            x_min = np.min([np.min(stats) for label, stats in stat_list]) if xlim[0] is not None else xlim[0]
+            x_max = np.max([np.max(stats) for label, stats in stat_list]) if xlim[1] is not None else xlim[1]
 
         # Get x-axis limits
         x = np.linspace(x_min, x_max, bins)
@@ -281,7 +285,7 @@ def get_density_plot(
             density.covariance_factor = lambda : covariance_factor
             density._compute_covariance()
 
-            ax.plot(x, density(x) * np.sum(stats), '-', label=label)
+            ax.plot(x, density(x) * np.sum(stats), '-', label=label, color=color.get(label, None))
 
         # Add labels
         if xlab is not None:
@@ -307,7 +311,7 @@ def get_density_plot(
             ax.grid(**grid_spec)
 
     except Exception as ex:
-        fig.close()
+        plt.close(fig)
         raise ex
 
     # Return plot
