@@ -92,7 +92,7 @@ def get_cdf_plot(
     """
     Get a CDF plot.
 
-    :param stat_list: A list of 2-element tuples, [0] sample name, [1] a numpy array of sizes. Sizes do not need to
+    :param size_list: A list of 2-element tuples, [0] sample name, [1] a numpy array of sizes. Sizes do not need to
         be sorted.
     :param width: Figure width.
     :param height: Figure height.
@@ -218,7 +218,7 @@ def get_density_plot(
         stat_list, scale_val=1, width=7, height=7, dpi=300, z_cut=None, legend=True,
         grid_spec = {'color': '#b8b8c8', 'which': 'both', 'lw': 0.5},
         bins=500, covariance_factor=0.25, xlim=(None, None), xlab=None, ylab=None,
-        color=dict()
+        color=dict(), line_style=dict()
     ):
     """
     Get a density plot.
@@ -239,6 +239,7 @@ def get_density_plot(
     :param xlab: X-axis label.
     :param ylab: Y-axis label.
     :param color: Color dictionary keyed by first tuple element for each entry in stat_list.
+    :param line_style: Dictionary of line styles keyed by first tuple element for each entry in stat_list.
     """
 
     # Make figure
@@ -285,7 +286,12 @@ def get_density_plot(
             density.covariance_factor = lambda : covariance_factor
             density._compute_covariance()
 
-            ax.plot(x, density(x) * np.sum(stats), '-', label=label, color=color.get(label, None))
+            ax.plot(
+                x, density(x) * np.sum(stats),
+                line_style.get(label, '-'),
+                color=color.get(label, None),
+                label=label
+            )
 
         # Add labels
         if xlab is not None:

@@ -2,15 +2,28 @@
 Generate subread stat tables.
 """
 
-MAX_QV = 60
+#
+# Definitions
+#
 
 def get_n50(vals):
+    """
+    Get N50 from a list of lengths.
+
+    :param vals: List of lengths.
+
+    :return: N50.
+    """
 
     vals = vals.sort_values(ascending=False)
     vals_csum = np.cumsum(vals)
 
     return vals.iloc[np.sum(vals_csum <= (vals_csum.iloc[-1] // 2)) + 1]
 
+
+#
+# Rules
+#
 
 # ccs_stats_merge_cell
 #
@@ -113,52 +126,15 @@ rule ccs_stats:
         if seq_file is None:
             raise RuntimeError('No sequence data file for cell {}'.format(wildcards.cell))
 
-        # Read each line in BAM
-        record_list = list()
+        # Get stats table
+        if seq_file.lower().endswith('.bam'):
+            df = ccsstatlib.stats.stats_table_bam(seq_file)
 
-        with pysam.AlignmentFile(seq_file, 'rb', check_sq=False) as sam_file:
-            for record in sam_file:
+        elif seq_file.lower().endswith('.fastq') or seq_file.lower().endswith('.fastq.gz'):
+            df = ccsstatlib.stats.stats_table_fastq(seq_file)
 
-                qv = None
-                passes = None
-
-                # Get tags
-                for tag, val in record.tags:
-                    if tag == 'rq':
-
-                        if qv is not None:
-                            raise RuntimeError('Duplicate QV values for record: {}'.format(record.query_name))
-
-                        qv = -10 * np.log10(1 - val)
-
-                        if qv == np.inf or qv > MAX_QV:
-                            qv = MAX_QV
-
-                    if tag == 'np':
-
-                        if passes is not None:
-                            raise RuntimeError('Duplicate NP values for record: {}'.format(record.query_name))
-
-                        passes = val
-
-                if qv is None:
-                    raise RuntimeError('Duplicate QV values for record: {}'.format(record.query_name))
-
-                # Add record
-                record_list.append(
-                    pd.Series(
-                        [
-                            record.query_name,
-                            len(record.seq),
-                            qv,
-                            passes
-                        ],
-                        index=['ID', 'LEN', 'QV', 'PASSES']
-                    )
-                )
-
-        # Merge
-        df = pd.concat(record_list, axis=1).T
+        else:
+            raise RuntimeError(f'Sequence file does not end with ".bam", ".fastq", or ".fastq.gz": {seq_file}')
 
         # Write ZMW table
         df.to_csv(output.tsv_zmw, sep='\t', index=False, compression='gzip')

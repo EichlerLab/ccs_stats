@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 
 import ccsstatlib.plot
+import ccsstatlib.stats
 
 import matplotlib.pyplot as plt
 
@@ -69,15 +70,17 @@ def get_cell_dict(as_list=False):
             if not line or line.startswith('#'):
                 continue
 
-            if not line.lower().endswith('.ccs.bam'):
+            ext_match = re.match(r'.*(\.bam|\.fastq|\.fastq\.gz)$', line, re.IGNORECASE)
+
+            if ext_match is None:
                 raise RuntimeError(
-                    'Unrecognized file type in FOFN on line {}: Must end with ".ccs.bam": {}'.format(
+                    'Unrecognized file type in FOFN on line {}: Must end with ".bam", ".fastq", or ".fastq.gz": {}'.format(
                         line_count,
                         line
                     )
                 )
 
-            cell_name = re.sub('\.ccs\.bam$', '', os.path.basename(line))
+            cell_name = os.path.basename(line)[:-len(ext_match[1])]
 
             if not as_list:
                 if cell_name in cell_dict:
@@ -113,10 +116,12 @@ def get_cell_dict(as_list=False):
 # Get all tables.
 rule subread_stats_get_tables:
     input:
-        tab_sample='{0}/sample_summary.tsv'.format(SAMPLE_NAME),
-        tab_cell='{0}/cell_summary.tsv'.format(SAMPLE_NAME)
-#        cdf_sub_pdf='{}/plot/cdf/cdf_cell_subread.pdf'.format(SAMPLE_NAME),
-#        cdf_lng_pdf='{}/plot/cdf/cdf_cell_longest.pdf'.format(SAMPLE_NAME)
+        tab_sample=f'{SAMPLE_NAME}/sample_summary.tsv',
+        tab_cell=f'{SAMPLE_NAME}/cell_summary.tsv',
+        png_cdf=f'{SAMPLE_NAME}/plot/cdf_cell.png',
+        png_qv=f'{SAMPLE_NAME}/plot/hist-line_cell_qv.png',
+        png_passes=f'{SAMPLE_NAME}/plot/hist-line_cell_passes.png',
+        png_den=f'{SAMPLE_NAME}/plot/density_cell_len.png'
 
 
 include: 'rules/ccs_stats.snakefile'
