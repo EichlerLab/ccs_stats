@@ -246,34 +246,38 @@ def get_density_plot(
     #fig, ax = plt.figure(1, figsize=(width, height), dpi=dpi)
     # ax = fig.add_subplot(1, 1, 1)
 
+    # Set x-axis limits
+    if xlim is None:
+        xlim = (None, None)
+
+    if xlim[0] is None or xlim[1] is None:
+
+        if z_cut is not None:
+            min_vals, max_vals = list(zip(*[z_min_max(stats, z_cut) for label, stats in stat_list]))
+        else:
+            min_vals, max_vals = list(zip(*[(np.min(stats), np.max(stats)) for label, stats in stat_list]))
+
+        if xlim[0] is None:
+            x_min = np.min(min_vals)
+        else:
+            x_min = x_lim[0]
+
+        if xlim[1] is None:
+            x_max = np.max(max_vals)
+        else:
+            x_max = x_lim[1]
+
+    else:
+        x_min = xlim[0]
+        x_max = xlim[1]
+
+    # Get x-axis limits
+    x = np.linspace(x_min, x_max, bins)
+
+    # Make figure
     fig, ax = plt.subplots(1, 1, figsize=(width, height), dpi=dpi)
 
     try:
-
-        # Set x-axis limits
-        if xlim is None:
-            xlim = (None, None)
-
-        if z_cut is not None and (xlim[0] is None or xlim[1] is None):
-
-            min_vals, max_vals = list(zip(*[z_min_max(stats, z_cut) for label, stats in stat_list]))
-
-            if xlim[0] is None:
-                x_min = np.min(min_vals)
-            else:
-                x_min = x_lim[0]
-
-            if xlim[1] is None:
-                x_max = np.max(max_vals)
-            else:
-                x_max = x_lim[1]
-
-        else:
-            x_min = np.min([np.min(stats) for label, stats in stat_list]) if xlim[0] is not None else xlim[0]
-            x_max = np.max([np.max(stats) for label, stats in stat_list]) if xlim[1] is not None else xlim[1]
-
-        # Get x-axis limits
-        x = np.linspace(x_min, x_max, bins)
 
         # Get densities
         for label, stats in stat_list:
@@ -318,7 +322,7 @@ def get_density_plot(
 
     except Exception as ex:
         plt.close(fig)
-        raise ex
+        raise RuntimeError('Figure generation failed') from ex
 
     # Return plot
     return fig

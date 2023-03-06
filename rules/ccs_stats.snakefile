@@ -31,11 +31,11 @@ def get_n50(vals):
 rule ccs_stats_merge_cell:
     input:
         tsv=lambda wildcards: [
-            '{0}/cells/{1}/cell_summary.tsv'.format(SAMPLE_NAME, cell)
+            '{0}/cells/{1}/cell_summary.tsv.gz'.format(SAMPLE_NAME, cell)
             for cell in get_cell_dict(True)
         ]
     output:
-        tsv='{0}/cell_summary.tsv'.format(SAMPLE_NAME),
+        tsv='{0}/cell_summary.tsv.gz'.format(SAMPLE_NAME),
         xlsx='{0}/cell_summary.xlsx'.format(SAMPLE_NAME)
     run:
 
@@ -44,7 +44,7 @@ rule ccs_stats_merge_cell:
             [pd.read_csv(tsv_file, sep='\t', header=0) for tsv_file in input.tsv]
         )
 
-        df.to_csv(output.tsv, sep='\t', index=False)
+        df.to_csv(output.tsv, sep='\t', index=False, compression='gzip')
         df.to_excel(output.xlsx, index=False)
 
 # ccs_stats_merge_sample
@@ -57,7 +57,7 @@ rule ccs_stats_merge_sample:
             for cell in get_cell_dict(True)
         ]
     output:
-        tsv='{0}/sample_summary.tsv'.format(SAMPLE_NAME),
+        tsv='{0}/sample_summary.tsv.gz'.format(SAMPLE_NAME),
         xlsx='{0}/sample_summary.xlsx'.format(SAMPLE_NAME)
     run:
 
@@ -106,7 +106,7 @@ rule ccs_stats_merge_sample:
         )).T
 
         # Write
-        df_summary.to_csv(output.tsv, sep='\t', index=False)
+        df_summary.to_csv(output.tsv, sep='\t', index=False, compression='gzip')
         df_summary.to_excel(output.xlsx, index=False)
 
 
@@ -116,7 +116,7 @@ rule ccs_stats_merge_sample:
 # Get stats per subread.
 rule ccs_stats:
     output:
-        tsv_summary=protected('{0}/cells/{{cell}}/cell_summary.tsv'.format(SAMPLE_NAME)),
+        tsv_summary=protected('{0}/cells/{{cell}}/cell_summary.tsv.gz'.format(SAMPLE_NAME)),
         tsv_zmw=protected('{0}/cells/{{cell}}/zmw_summary.tsv.gz'.format(SAMPLE_NAME))
     run:
 
@@ -172,4 +172,4 @@ rule ccs_stats:
         )).T
 
         # Write
-        df_summary.to_csv(output.tsv_summary, sep='\t', index=False)
+        df_summary.to_csv(output.tsv_summary, sep='\t', index=False, compression='gzip')

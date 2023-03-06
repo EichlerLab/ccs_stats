@@ -111,13 +111,13 @@ def get_cell_dict(as_list=False):
 # Default target
 #
 
-# subread_stats_get_tables
+# ccs_stats_get_tables
 #
 # Get all tables.
-rule subread_stats_get_tables:
+rule ccs_stats_get_tables:
     input:
-        tab_sample=f'{SAMPLE_NAME}/sample_summary.tsv',
-        tab_cell=f'{SAMPLE_NAME}/cell_summary.tsv',
+        tab_sample=f'{SAMPLE_NAME}/sample_summary.tsv.gz',
+        tab_cell=f'{SAMPLE_NAME}/cell_summary.tsv.gz',
         png_cdf=f'{SAMPLE_NAME}/plot/cdf_cell.png',
         png_qv=f'{SAMPLE_NAME}/plot/hist-line_cell_qv.png',
         png_passes=f'{SAMPLE_NAME}/plot/hist-line_cell_passes.png',
